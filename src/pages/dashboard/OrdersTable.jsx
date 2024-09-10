@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import PropTypes from 'prop-types';
 // material-ui
 import Link from '@mui/material/Link';
@@ -10,29 +12,14 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-
 // third-party
 import { NumericFormat } from 'react-number-format';
-
 // project import
 import Dot from 'components/@extended/Dot';
 
-function createData(tracking_no, name, fat, carbs, protein) {
-  return { tracking_no, name, fat, carbs, protein };
+function createData(count, date, time, fullName, phoneNumber, email, description) {
+  return { count, date, time, fullName, phoneNumber, email, description };
 }
-
-const rows = [
-  createData(84564564, 'Camera Lens', 40, 2, 40570),
-  createData(98764564, 'Laptop', 300, 0, 180139),
-  createData(98756325, 'Mobile', 355, 1, 90989),
-  createData(98652366, 'Handset', 50, 1, 10239),
-  createData(13286564, 'Computer Accessories', 100, 1, 83348),
-  createData(86739658, 'TV', 99, 0, 410780),
-  createData(13256498, 'Keyboard', 125, 2, 70999),
-  createData(98753263, 'Mouse', 89, 2, 10570),
-  createData(98753275, 'Desktop', 185, 1, 98063),
-  createData(98753291, 'Chair', 100, 0, 14001)
-];
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -45,7 +32,9 @@ function descendingComparator(a, b, orderBy) {
 }
 
 function getComparator(order, orderBy) {
-  return order === 'desc' ? (a, b) => descendingComparator(a, b, orderBy) : (a, b) => -descendingComparator(a, b, orderBy);
+  return order === 'desc'
+    ? (a, b) => descendingComparator(a, b, orderBy)
+    : (a, b) => -descendingComparator(a, b, orderBy);
 }
 
 function stableSort(array, comparator) {
@@ -61,40 +50,14 @@ function stableSort(array, comparator) {
 }
 
 const headCells = [
-  {
-    id: 'tracking_no',
-    align: 'left',
-    disablePadding: false,
-    label: 'Tracking No.'
-  },
-  {
-    id: 'name',
-    align: 'left',
-    disablePadding: true,
-    label: 'Product Name'
-  },
-  {
-    id: 'fat',
-    align: 'right',
-    disablePadding: false,
-    label: 'Total Order'
-  },
-  {
-    id: 'carbs',
-    align: 'left',
-    disablePadding: false,
-
-    label: 'Status'
-  },
-  {
-    id: 'protein',
-    align: 'right',
-    disablePadding: false,
-    label: 'Total Amount'
-  }
+  { id: 'count', align: 'left', disablePadding: false, label: 'Ordinal number' },
+  { id: 'date', align: 'left', disablePadding: true, label: 'Date' },
+  { id: 'time', align: 'right', disablePadding: true, label: 'Time' },
+  { id: 'fullname', align: 'right', disablePadding: false, label: 'Full Name' },
+  { id: 'phonenumber', align: 'right', disablePadding: false, label: 'Phone Number' },
+  { id: 'email', align: 'right', disablePadding: false, label: 'Email' },
+  { id: 'description', align: 'right', disablePadding: false, label: 'Description' }
 ];
-
-// ==============================|| ORDER TABLE - HEADER ||============================== //
 
 function OrderTableHead({ order, orderBy }) {
   return (
@@ -145,11 +108,40 @@ function OrderStatus({ status }) {
   );
 }
 
-// ==============================|| ORDER TABLE ||============================== //
+OrderTableHead.propTypes = { order: PropTypes.string.isRequired, orderBy: PropTypes.string.isRequired };
+OrderStatus.propTypes = { status: PropTypes.number.isRequired };
 
 export default function OrderTable() {
-  const order = 'asc';
-  const orderBy = 'tracking_no';
+  const [rows, setRows] = useState([]);
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('count');
+
+  useEffect(() => {
+    const token = localStorage.token;
+
+    axios.get('http://localhost:8082/api/bookings/getAll', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+      .then(response => {
+        const data = response.data;
+        const count = 1;
+        const transformedRows = data.map(item => createData(
+          count,
+          item.date,
+          item.time,
+          item.fullName,
+          item.phoneNumber,
+          item.email,
+          item.description
+        ));
+        setRows(transformedRows);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
 
   return (
     <Box>
@@ -175,19 +167,17 @@ export default function OrderTable() {
                   role="checkbox"
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                   tabIndex={-1}
-                  key={row.tracking_no}
+                  key={row.count}
                 >
                   <TableCell component="th" id={labelId} scope="row">
-                    <Link color="secondary"> {row.tracking_no}</Link>
+                    <Link color="secondary"> {index + 1}</Link>
                   </TableCell>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell align="right">{row.fat}</TableCell>
-                  <TableCell>
-                    <OrderStatus status={row.carbs} />
-                  </TableCell>
-                  <TableCell align="right">
-                    <NumericFormat value={row.protein} displayType="text" thousandSeparator prefix="$" />
-                  </TableCell>
+                  <TableCell>{row.date}</TableCell>
+                  <TableCell align="right">{row.time}</TableCell>
+                  <TableCell align="right">{row.fullName}</TableCell>
+                  <TableCell align="right">{row.phoneNumber}</TableCell>
+                  <TableCell align="right">{row.email}</TableCell>
+                  <TableCell align="right">{row.description}</TableCell>
                 </TableRow>
               );
             })}
@@ -197,7 +187,3 @@ export default function OrderTable() {
     </Box>
   );
 }
-
-OrderTableHead.propTypes = { order: PropTypes.any, orderBy: PropTypes.string };
-
-OrderStatus.propTypes = { status: PropTypes.number };
