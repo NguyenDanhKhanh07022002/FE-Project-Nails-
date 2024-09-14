@@ -12,8 +12,6 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-// third-party
-import { NumericFormat } from 'react-number-format';
 // project import
 import Dot from 'components/@extended/Dot';
 
@@ -55,8 +53,8 @@ const headCells = [
   { id: 'time', align: 'right', disablePadding: true, label: 'Time' },
   { id: 'fullname', align: 'right', disablePadding: false, label: 'Full Name' },
   { id: 'phonenumber', align: 'right', disablePadding: false, label: 'Phone Number' },
-  { id: 'email', align: 'right', disablePadding: false, label: 'Email' },
-  { id: 'description', align: 'right', disablePadding: false, label: 'Description' }
+  { id: 'email', align: 'left', disablePadding: false, label: 'Email' },
+  { id: 'description', align: 'left', disablePadding: false, label: 'Description' }
 ];
 
 function OrderTableHead({ order, orderBy }) {
@@ -111,17 +109,22 @@ function OrderStatus({ status }) {
 OrderTableHead.propTypes = { order: PropTypes.string.isRequired, orderBy: PropTypes.string.isRequired };
 OrderStatus.propTypes = { status: PropTypes.number.isRequired };
 
-export default function OrderTable() {
+export default function OrdersTable({ searchValue }) {
   const [rows, setRows] = useState([]);
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('count');
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const phoneNumber = params.get('search') || '';
     const token = localStorage.token;
 
     axios.get('http://localhost:8082/api/bookings/getAll', {
       headers: {
         'Authorization': `Bearer ${token}`
+      },
+      params: {
+        phoneNumber
       }
     })
       .then(response => {
@@ -129,12 +132,12 @@ export default function OrderTable() {
         const count = 1;
         const transformedRows = data.map(item => createData(
           count,
-          item.date,
-          item.time,
-          item.fullName,
-          item.phoneNumber,
-          item.email,
-          item.description
+          item.date || '',
+          item.time || '',
+          item.fullName || '',
+          item.phoneNumber || '',
+          item.email || '',
+          item.description || ''
         ));
         setRows(transformedRows);
       })
@@ -142,6 +145,11 @@ export default function OrderTable() {
         console.error('Error fetching data:', error);
       });
   }, []);
+
+  // Filter rows based on search value
+  const filteredRows = rows.filter(row =>
+    (row.phoneNumber && row.phoneNumber.includes(searchValue))
+  );
 
   return (
     <Box>
@@ -158,7 +166,7 @@ export default function OrderTable() {
         <Table aria-labelledby="tableTitle">
           <OrderTableHead order={order} orderBy={orderBy} />
           <TableBody>
-            {stableSort(rows, getComparator(order, orderBy)).map((row, index) => {
+            {stableSort(filteredRows, getComparator(order, orderBy)).map((row, index) => {
               const labelId = `enhanced-table-checkbox-${index}`;
 
               return (
@@ -167,7 +175,7 @@ export default function OrderTable() {
                   role="checkbox"
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                   tabIndex={-1}
-                  key={row.count}
+                  key={index}
                 >
                   <TableCell component="th" id={labelId} scope="row">
                     <Link color="secondary"> {index + 1}</Link>
@@ -176,8 +184,8 @@ export default function OrderTable() {
                   <TableCell align="right">{row.time}</TableCell>
                   <TableCell align="right">{row.fullName}</TableCell>
                   <TableCell align="right">{row.phoneNumber}</TableCell>
-                  <TableCell align="right">{row.email}</TableCell>
-                  <TableCell align="right">{row.description}</TableCell>
+                  <TableCell align="left">{row.email}</TableCell>
+                  <TableCell align="left">{row.description}</TableCell>
                 </TableRow>
               );
             })}
@@ -187,3 +195,7 @@ export default function OrderTable() {
     </Box>
   );
 }
+
+OrdersTable.propTypes = {
+  searchValue: PropTypes.string.isRequired
+};

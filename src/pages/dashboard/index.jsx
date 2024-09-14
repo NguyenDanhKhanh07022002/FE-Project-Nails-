@@ -1,4 +1,5 @@
-// material-ui
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Avatar from '@mui/material/Avatar';
 import AvatarGroup from '@mui/material/AvatarGroup';
 import Button from '@mui/material/Button';
@@ -11,7 +12,10 @@ import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-
+import FormControl from '@mui/material/FormControl';
+import InputAdornment from '@mui/material/InputAdornment';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import SearchOutlined from '@ant-design/icons/SearchOutlined';
 // project import
 import MainCard from 'components/MainCard';
 import AnalyticEcommerce from 'components/cards/statistics/AnalyticEcommerce';
@@ -20,15 +24,6 @@ import ReportAreaChart from './ReportAreaChart';
 import UniqueVisitorCard from './UniqueVisitorCard';
 import SaleReportCard from './SaleReportCard';
 import OrdersTable from './OrdersTable';
-
-// assets
-import GiftOutlined from '@ant-design/icons/GiftOutlined';
-import MessageOutlined from '@ant-design/icons/MessageOutlined';
-import SettingOutlined from '@ant-design/icons/SettingOutlined';
-import avatar1 from 'assets/images/users/avatar-1.png';
-import avatar2 from 'assets/images/users/avatar-2.png';
-import avatar3 from 'assets/images/users/avatar-3.png';
-import avatar4 from 'assets/images/users/avatar-4.png';
 
 // avatar style
 const avatarSX = {
@@ -50,6 +45,11 @@ const actionSX = {
 // ==============================|| DASHBOARD - DEFAULT ||============================== //
 
 export default function DashboardDefault() {
+  const [searchValue, setSearchValue] = useState('');
+  const handleSearchChange = (event) => {
+    setSearchValue(event.target.value);
+  };
+
   return (
     <Grid container rowSpacing={4.5} columnSpacing={2.75}>
       {/* row 1 */}
@@ -72,12 +72,30 @@ export default function DashboardDefault() {
       <Grid item xs={12}>
         <Grid container alignItems="center" justifyContent="space-between">
           <Grid item>
-            <Typography variant="h5">Recent Orders</Typography>
+            <Typography variant="h5">Booking list</Typography>
           </Grid>
           <Grid item />
+          <FormControl align="right" sx={{ width: { xs: '100%', md: 250 } }}>
+            <OutlinedInput
+              size="small"
+              id="header-search"
+              startAdornment={
+                <InputAdornment position="start" sx={{ mr: -0.5 }}>
+                  <SearchOutlined />
+                </InputAdornment>
+              }
+              aria-describedby="header-search-text"
+              inputProps={{
+                'aria-label': 'weight'
+              }}
+              placeholder="Ctrl + K"
+              value={searchValue}
+              onChange={handleSearchChange}
+            />
+          </FormControl>
         </Grid>
         <MainCard sx={{ mt: 2 }} content={false}>
-          <OrdersTable />
+          <OrdersTable searchValue={searchValue} />
         </MainCard>
       </Grid>
     </Grid>
