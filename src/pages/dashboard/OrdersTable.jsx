@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 // material-ui
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
@@ -12,11 +14,13 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 // project import
 import Dot from 'components/@extended/Dot';
 
-function createData(count, date, time, fullName, phoneNumber, email, description) {
-  return { count, date, time, fullName, phoneNumber, email, description };
+function createData(count, id, date, time, fullName, phoneNumber, email, description) {
+  return { count, id, date, time, fullName, phoneNumber, email, description };
 }
 
 function descendingComparator(a, b, orderBy) {
@@ -115,41 +119,73 @@ export default function OrdersTable({ searchValue }) {
   const [orderBy, setOrderBy] = useState('count');
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const phoneNumber = params.get('search') || '';
-    const token = localStorage.token;
+    getAll();
+  }, []);
 
+  const getAll = () => {
+    const token = localStorage.token;
     axios.get('http://localhost:8082/api/bookings/getAll', {
       headers: {
         'Authorization': `Bearer ${token}`
-      },
-      params: {
-        phoneNumber
       }
     })
       .then(response => {
         const data = response.data;
-        const count = 1;
-        const transformedRows = data.map(item => createData(
-          count,
-          item.date || '',
-          item.time || '',
-          item.fullName || '',
-          item.phoneNumber || '',
-          item.email || '',
-          item.description || ''
-        ));
+        const transformedRows = data.map((item, index) =>
+          createData(
+            index + 1,
+            item.id,
+            item.date || '',
+            item.time || '',
+            item.fullName || '',
+            item.phoneNumber || '',
+            item.email || '',
+            item.description || ''
+          )
+        );
         setRows(transformedRows);
       })
       .catch(error => {
         console.error('Error fetching data:', error);
       });
-  }, []);
+  };
 
   // Filter rows based on search value
   const filteredRows = rows.filter(row =>
-    (row.phoneNumber && row.phoneNumber.includes(searchValue))
+    (row.phoneNumber && row.phoneNumber.includes(searchValue)) ||
+    (row.email && row.email.includes(searchValue))
   );
+
+  const onDelete = (id) => {
+    Swal.fire({
+      title: 'Do you want to delete this booking?',
+      showCancelButton: true,
+      confirmButtonText: 'OK',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const token = localStorage.token;
+        axios
+          .delete(`http://localhost:8082/api/bookings/delete/${id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          .then((response) => {
+            console.log('Response:', response);
+            if (response.status == 204) {
+              Swal.fire('Deleted!', '', 'success');
+              getAll();
+            } else {
+
+            }
+          })
+          .catch((error) => {
+            console.error('Error deleting booking:', error);
+            Swal.fire('Error', 'Could not delete booking.', 'error');
+          });
+      }
+    });
+  };
 
   return (
     <Box>
@@ -186,6 +222,11 @@ export default function OrdersTable({ searchValue }) {
                   <TableCell align="right">{row.phoneNumber}</TableCell>
                   <TableCell align="left">{row.email}</TableCell>
                   <TableCell align="left">{row.description}</TableCell>
+                  <TableCell align="left">
+                    <button className='btn btn-danger' onClick={() => onDelete(row.id)}>
+                      <i className="bi bi-trash"></i>
+                    </button>
+                  </TableCell>
                 </TableRow>
               );
             })}
