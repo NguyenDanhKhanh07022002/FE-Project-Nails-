@@ -9,6 +9,7 @@ import Search from './Search';
 import Profile from './Profile';
 import Notification from './Notification';
 import MobileSection from './MobileSection';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 // project import
 import { GithubOutlined } from '@ant-design/icons';
@@ -20,9 +21,10 @@ export default function HeaderContent() {
 
   return (
     <>
-      {!downLG && <Search />}
+      {/* {!downLG && <Search />} */}
       {downLG && <Box sx={{ width: '100%', ml: 1 }} />}
       <IconButton
+        class="ml-2"
         component={Link}
         href="https://github.com/codedthemes/mantis-free-react-admin-template"
         target="_blank"
@@ -31,7 +33,6 @@ export default function HeaderContent() {
         title="Download Free Version"
         sx={{ color: 'text.primary', bgcolor: 'grey.100' }}
       >
-        <GithubOutlined />
       </IconButton>
 
       <Notification />

@@ -19,8 +19,8 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 // project import
 import Dot from 'components/@extended/Dot';
 
-function createData(count, id, date, time, fullName, phoneNumber, email, description) {
-  return { count, id, date, time, fullName, phoneNumber, email, description };
+function createData(count, id, date, time, fullName, phoneNumber, email, bookingService, description) {
+  return { count, id, date, time, fullName, phoneNumber, email, bookingService, description };
 }
 
 function descendingComparator(a, b, orderBy) {
@@ -58,6 +58,7 @@ const headCells = [
   { id: 'fullname', align: 'right', disablePadding: false, label: 'Full Name' },
   { id: 'phonenumber', align: 'right', disablePadding: false, label: 'Phone Number' },
   { id: 'email', align: 'left', disablePadding: false, label: 'Email' },
+  { id: 'bookingSerive', align: 'left', disablePadding: false, label: 'Booking Serive' },
   { id: 'description', align: 'left', disablePadding: false, label: 'Description' }
 ];
 
@@ -140,6 +141,7 @@ export default function OrdersTable({ searchValue }) {
             item.fullName || '',
             item.phoneNumber || '',
             item.email || '',
+            item.bookingService || '',
             item.description || ''
           )
         );
@@ -149,7 +151,20 @@ export default function OrdersTable({ searchValue }) {
         console.error('Error fetching data:', error);
       });
   };
-
+  function getBookingServiceText(bookingService) {
+    switch (bookingService) {
+      case 1:
+        return 'Manicure';
+      case 2:
+        return 'Pedicure';
+      case 3:
+        return 'Manicure + Pedicure';
+      case 4:
+        return 'Cosmetics';
+      default:
+        return 'Unknown Service';
+    }
+  }
   // Filter rows based on search value
   const filteredRows = rows.filter(row =>
     (row.phoneNumber && row.phoneNumber.includes(searchValue)) ||
@@ -221,6 +236,7 @@ export default function OrdersTable({ searchValue }) {
                   <TableCell align="right">{row.fullName}</TableCell>
                   <TableCell align="right">{row.phoneNumber}</TableCell>
                   <TableCell align="left">{row.email}</TableCell>
+                  <TableCell align="left">{getBookingServiceText(row.bookingService)}</TableCell>
                   <TableCell align="left">{row.description}</TableCell>
                   <TableCell align="left">
                     <button className='btn btn-danger' onClick={() => onDelete(row.id)}>

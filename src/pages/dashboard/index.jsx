@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '@mui/material/Avatar';
 import AvatarGroup from '@mui/material/AvatarGroup';
@@ -16,7 +16,8 @@ import FormControl from '@mui/material/FormControl';
 import InputAdornment from '@mui/material/InputAdornment';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import SearchOutlined from '@ant-design/icons/SearchOutlined';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import axios from 'axios'; // Import axios
+
 // project import
 import MainCard from 'components/MainCard';
 import AnalyticEcommerce from 'components/cards/statistics/AnalyticEcommerce';
@@ -25,6 +26,7 @@ import ReportAreaChart from './ReportAreaChart';
 import UniqueVisitorCard from './UniqueVisitorCard';
 import SaleReportCard from './SaleReportCard';
 import OrdersTable from './OrdersTable';
+import Pagination from './Pagination';
 
 // avatar style
 const avatarSX = {
@@ -47,27 +49,60 @@ const actionSX = {
 
 export default function DashboardDefault() {
   const [searchValue, setSearchValue] = useState('');
+  const [bookingData, setBookingData] = useState([]);
+  const [totalBookings, setTotalBookings] = useState(0);
+  const [manicureCount, setManicureCount] = useState(0);
+  const [pedecureCount, setPedecureCount] = useState(0);
+  const [comboCount, setComboCount] = useState(0);
+  const [cosmeticsCount, setCosmeticsCount] = useState(0);
+  const [itemsPerPage] = useState(10);
+
   const handleSearchChange = (event) => {
     setSearchValue(event.target.value);
   };
+
+  useEffect(() => {
+    if (searchValue.trim() !== '') {
+      axios.get(`http://localhost:8082/api/bookings/getPhoneNumber/${searchValue}`)
+        .then(response => {
+          const data = response.data;
+          setBookingData(data);
+          setTotalBookings(data.length);
+          const countManicureCount = data.filter(record => record.bookingService === "1").length;
+          setManicureCount(countManicureCount);
+          const countPedecureCount = data.filter(record => record.bookingService === "2").length;
+          setPedecureCount(countPedecureCount);
+          const countComboCount = data.filter(record => record.bookingService === "3").length;
+          setComboCount(countComboCount);
+          const countCosmeticsCount = data.filter(record => record.bookingService === "4").length;
+          setCosmeticsCount(countCosmeticsCount);
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+        });
+    }
+  }, [searchValue]);
 
   return (
     <Grid container rowSpacing={4.5} columnSpacing={2.75}>
       {/* row 1 */}
       <Grid item xs={12} sx={{ mb: -2.25 }}>
-        <Typography variant="h5">Dashboard</Typography>
+        {/* <Typography variant="h5">Dashboard</Typography> */}
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <AnalyticEcommerce title="Total Page Views" count="4,42,236" percentage={59.3} extra="35,000" />
+      <Grid item xs={12} sm={6} md={4} lg={2.4}>
+        <AnalyticEcommerce title="Total Booking Service" count={totalBookings.toLocaleString()} percentage={59.3} extra="35,000" />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <AnalyticEcommerce title="Total Users" count="78,250" percentage={70.5} extra="8,900" />
+      <Grid item xs={12} sm={6} md={4} lg={2.4}>
+        <AnalyticEcommerce title="Total Manicure" count={manicureCount.toLocaleString()} percentage={70.5} extra="8,900" />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <AnalyticEcommerce title="Total Order" count="18,800" percentage={27.4} isLoss color="warning" extra="1,943" />
+      <Grid item xs={12} sm={6} md={4} lg={2.4}>
+        <AnalyticEcommerce title="Total Pedicure" count={pedecureCount.toLocaleString()} percentage={27.4} isLoss extra="1,943" />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <AnalyticEcommerce title="Total Sales" count="$35,078" percentage={27.4} isLoss color="warning" extra="$20,395" />
+      <Grid item xs={12} sm={6} md={4} lg={2.4}>
+        <AnalyticEcommerce title="Total Manicure + Pedicure" count={comboCount.toLocaleString()} percentage={27.4} isLoss extra="$20,395" />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={2.4}>
+        <AnalyticEcommerce title="Cosmetics" count={cosmeticsCount.toLocaleString()} percentage={27.4} isLoss extra="$20,395" />
       </Grid>
       {/* row 3 */}
       <Grid item xs={12}>
@@ -96,26 +131,10 @@ export default function DashboardDefault() {
           </FormControl>
         </Grid>
         <MainCard sx={{ mt: 2 }} content={false}>
-          <OrdersTable searchValue={searchValue} />
+          <OrdersTable searchValue={searchValue} data={bookingData} /> {/* Pass data to OrdersTable */}
         </MainCard>
-        <Grid class="text-center">
-          <nav aria-label="Page navigation example" className="mt-2 d-flex justify-content-center">
-            <ul class="pagination">
-              <li class="page-item">
-                <a class="page-link" href="#" aria-label="Previous">
-                  <span aria-hidden="true">&laquo;</span>
-                </a>
-              </li>
-              <li class="page-item"><a class="page-link" href="#">1</a></li>
-              <li class="page-item"><a class="page-link" href="#">2</a></li>
-              <li class="page-item"><a class="page-link" href="#">3</a></li>
-              <li class="page-item">
-                <a class="page-link" href="#" aria-label="Next">
-                  <span aria-hidden="true">&raquo;</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
+        <Grid className="text-center">
+          <Pagination />
         </Grid>
       </Grid>
     </Grid>
