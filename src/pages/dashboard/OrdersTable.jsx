@@ -5,7 +5,6 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 // material-ui
 import Link from '@mui/material/Link';
-import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -14,6 +13,8 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Pagination from '@mui/material/Pagination';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 // project import
@@ -118,6 +119,9 @@ export default function OrdersTable({ searchValue }) {
   const [rows, setRows] = useState([]);
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('count');
+  const [filteredRows, setFilteredRows] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
     getAll();
@@ -132,44 +136,75 @@ export default function OrdersTable({ searchValue }) {
     })
       .then(response => {
         const data = response.data;
-        const transformedRows = data.map((item, index) =>
-          createData(
-            index + 1,
-            item.id,
-            item.date || '',
-            item.time || '',
-            item.fullName || '',
-            item.phoneNumber || '',
-            item.email || '',
-            item.bookingService || '',
-            item.description || ''
-          )
-        );
+        const now = new Date(); // Thời gian hiện tại
+
+        const transformedRows = data
+          .sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+
+            // Kiểm tra xem bản ghi có trước thời gian hiện tại hay không
+            const isPastA = dateA < now;
+            const isPastB = dateB < now;
+
+            // Nếu cả hai bản ghi đều trước thời gian hiện tại, sắp xếp giảm dần theo ngày
+            if (isPastA && isPastB) {
+              return dateB - dateA;
+            }
+            // Nếu bản ghi A trước thời gian hiện tại, cho nó xuống dưới
+            if (isPastA) {
+              return 1;
+            }
+            // Nếu bản ghi B trước thời gian hiện tại, cho nó xuống dưới
+            if (isPastB) {
+              return -1;
+            }
+            // Nếu cả hai bản ghi đều sau thời gian hiện tại, sắp xếp giảm dần theo ngày
+            return dateB - dateA;
+          })
+          .map((item, index) =>
+            createData(
+              index + 1,
+              item.id,
+              item.date || '',
+              item.time || '',
+              item.fullName || '',
+              item.phoneNumber || '',
+              item.email || '',
+              item.bookingService || '',
+              item.description || ''
+            )
+          );
         setRows(transformedRows);
       })
       .catch(error => {
         console.error('Error fetching data:', error);
       });
   };
+
   function getBookingServiceText(bookingService) {
     switch (bookingService) {
-      case 1:
+      case "1":
         return 'Manicure';
-      case 2:
+      case "2":
         return 'Pedicure';
-      case 3:
+      case "3":
         return 'Manicure + Pedicure';
-      case 4:
+      case "4":
         return 'Cosmetics';
       default:
         return 'Unknown Service';
     }
   }
   // Filter rows based on search value
-  const filteredRows = rows.filter(row =>
-    (row.phoneNumber && row.phoneNumber.includes(searchValue)) ||
-    (row.email && row.email.includes(searchValue))
-  );
+  // const filteredRows = rows.filter(row =>
+  //   (row.phoneNumber && row.phoneNumber.includes(searchValue)) ||
+  //   (row.email && row.email.includes(searchValue))
+  // );
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
 
   const onDelete = (id) => {
     Swal.fire({
@@ -201,6 +236,23 @@ export default function OrdersTable({ searchValue }) {
       }
     });
   };
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
+
+  useEffect(() => {
+    if (searchValue.trim() !== '') {
+      setFilteredRows(rows.filter(row => row.phoneNumber.includes(searchValue) || row.email.includes(searchValue)));
+    } else {
+      setFilteredRows(rows);
+    }
+  }, [searchValue, rows]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchValue]);
+
+  const now = new Date();
 
   return (
     <Box>
@@ -217,19 +269,27 @@ export default function OrdersTable({ searchValue }) {
         <Table aria-labelledby="tableTitle">
           <OrderTableHead order={order} orderBy={orderBy} />
           <TableBody>
-            {stableSort(filteredRows, getComparator(order, orderBy)).map((row, index) => {
+            {stableSort(currentItems, getComparator(order, orderBy)).map((row, index) => {
               const labelId = `enhanced-table-checkbox-${index}`;
+              const rowDate = new Date(row.date);
+
+              const isPast = rowDate < new Date().setHours(0, 0, 0, 0); // Ngày trước hôm nay
+              const isFuture = rowDate > new Date().setHours(23, 59, 59, 999); // Ngày sau hôm nay
+              const isToday = rowDate.toDateString() === now.toDateString(); // Ngày bằng hôm nay
 
               return (
                 <TableRow
                   hover
                   role="checkbox"
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  sx={{
+                    '&:last-child td, &:last-child th': { border: 0 },
+                    backgroundColor: isPast ? '#ffcccc' : isFuture ? '#ccffcc' : 'inherit', // Màu đỏ nếu trước, màu xanh nếu sau, mặc định nếu hôm nay
+                  }}
                   tabIndex={-1}
-                  key={index}
+                  key={row.id}
                 >
                   <TableCell component="th" id={labelId} scope="row">
-                    <Link color="secondary"> {index + 1}</Link>
+                    <Link color="secondary">{indexOfFirstItem + index + 1}</Link>
                   </TableCell>
                   <TableCell>{row.date}</TableCell>
                   <TableCell align="right">{row.time}</TableCell>
@@ -239,16 +299,28 @@ export default function OrdersTable({ searchValue }) {
                   <TableCell align="left">{getBookingServiceText(row.bookingService)}</TableCell>
                   <TableCell align="left">{row.description}</TableCell>
                   <TableCell align="left">
-                    <button className='btn btn-danger' onClick={() => onDelete(row.id)}>
+                    <button
+                      className='btn btn-danger'
+                      onClick={() => onDelete(row.id)}
+                    >
                       <i className="bi bi-trash"></i>
                     </button>
                   </TableCell>
                 </TableRow>
               );
             })}
+
           </TableBody>
         </Table>
       </TableContainer>
+      <Stack spacing={2} sx={{ mt: 2, mb: 2, justifyContent: 'center', alignItems: 'center' }}>
+        <Pagination
+          count={Math.ceil(filteredRows.length / itemsPerPage)}
+          page={currentPage}
+          onChange={handlePageChange}
+          color="primary"
+        />
+      </Stack>
     </Box>
   );
 }

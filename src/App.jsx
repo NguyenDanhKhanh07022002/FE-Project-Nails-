@@ -1,4 +1,5 @@
 import { RouterProvider } from 'react-router-dom';
+import "react-datepicker/dist/react-datepicker.css";
 
 // project import
 import router from 'routes';

@@ -1,51 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Avatar from '@mui/material/Avatar';
-import AvatarGroup from '@mui/material/AvatarGroup';
-import Button from '@mui/material/Button';
-import Grid from '@mui/material/Grid';
-import List from '@mui/material/List';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import ListItemText from '@mui/material/ListItemText';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import FormControl from '@mui/material/FormControl';
-import InputAdornment from '@mui/material/InputAdornment';
-import OutlinedInput from '@mui/material/OutlinedInput';
+import { Grid, Typography, FormControl, OutlinedInput, InputAdornment } from '@mui/material';
 import SearchOutlined from '@ant-design/icons/SearchOutlined';
-import axios from 'axios'; // Import axios
+import axios from 'axios';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 // project import
 import MainCard from 'components/MainCard';
 import AnalyticEcommerce from 'components/cards/statistics/AnalyticEcommerce';
-import MonthlyBarChart from './MonthlyBarChart';
-import ReportAreaChart from './ReportAreaChart';
-import UniqueVisitorCard from './UniqueVisitorCard';
-import SaleReportCard from './SaleReportCard';
 import OrdersTable from './OrdersTable';
-import Pagination from './Pagination';
-
-// avatar style
-const avatarSX = {
-  width: 36,
-  height: 36,
-  fontSize: '1rem'
-};
-
-// action style
-const actionSX = {
-  mt: 0.75,
-  ml: 1,
-  top: 'auto',
-  right: 'auto',
-  alignSelf: 'flex-start',
-  transform: 'none'
-};
-
-// ==============================|| DASHBOARD - DEFAULT ||============================== //
 
 export default function DashboardDefault() {
   const [searchValue, setSearchValue] = useState('');
@@ -55,33 +18,46 @@ export default function DashboardDefault() {
   const [pedecureCount, setPedecureCount] = useState(0);
   const [comboCount, setComboCount] = useState(0);
   const [cosmeticsCount, setCosmeticsCount] = useState(0);
+  const [page, setPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [startDate, setStartDate] = useState(new Date());
 
   const handleSearchChange = (event) => {
-    setSearchValue(event.target.value);
+    setSearchValue(event.target.value.trim());
+    setPage(1);
   };
 
   useEffect(() => {
     if (searchValue.trim() !== '') {
-      axios.get(`http://localhost:8082/api/bookings/getPhoneNumber/${searchValue}`)
+      axios.get(`http://localhost:8082/api/bookings/getPhoneNumberOrEmail`, {
+        params: {
+          phoneNumber: searchValue,
+          email: searchValue
+        }
+      })
         .then(response => {
           const data = response.data;
           setBookingData(data);
           setTotalBookings(data.length);
           const countManicureCount = data.filter(record => record.bookingService === "1").length;
           setManicureCount(countManicureCount);
-          const countPedecureCount = data.filter(record => record.bookingService === "2").length;
-          setPedecureCount(countPedecureCount);
+          const countPedicureCount = data.filter(record => record.bookingService === "2").length;
+          setPedecureCount(countPedicureCount);
           const countComboCount = data.filter(record => record.bookingService === "3").length;
           setComboCount(countComboCount);
           const countCosmeticsCount = data.filter(record => record.bookingService === "4").length;
           setCosmeticsCount(countCosmeticsCount);
+          setPage(1);
         })
         .catch(error => {
           console.error('Error fetching data:', error);
         });
     }
   }, [searchValue]);
+
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
 
   return (
     <Grid container rowSpacing={4.5} columnSpacing={2.75}>
@@ -131,11 +107,8 @@ export default function DashboardDefault() {
           </FormControl>
         </Grid>
         <MainCard sx={{ mt: 2 }} content={false}>
-          <OrdersTable searchValue={searchValue} data={bookingData} /> {/* Pass data to OrdersTable */}
+          <OrdersTable searchValue={searchValue} data={bookingData} page={page} itemsPerPage={itemsPerPage} />
         </MainCard>
-        <Grid className="text-center">
-          <Pagination />
-        </Grid>
       </Grid>
     </Grid>
   );

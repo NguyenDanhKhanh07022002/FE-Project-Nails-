@@ -46,6 +46,7 @@ export default function AuthLogin({ isDemo = false }) {
       .then((response) => {
         console.log('Login successful:', response.data);
         localStorage.setItem('token', response.data.accessToken);
+        localStorage.setItem('userId', response.data.id);
 
         navigate('/dashboard/default');
       })

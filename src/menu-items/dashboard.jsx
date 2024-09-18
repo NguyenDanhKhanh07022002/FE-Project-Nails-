@@ -15,7 +15,7 @@ const dashboard = {
   children: [
     {
       id: 'dashboard',
-      title: 'Dashboard',
+      title: 'Booking List',
       type: 'item',
       url: '/free/login/dashboard/default',
       icon: icons.DashboardOutlined,

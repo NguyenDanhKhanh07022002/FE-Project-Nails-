@@ -23,8 +23,8 @@ export default function HeaderContent() {
     <>
       {/* {!downLG && <Search />} */}
       {downLG && <Box sx={{ width: '100%', ml: 1 }} />}
-      <IconButton
-        class="ml-2"
+      {/* <IconButton
+        className="ml-2"
         component={Link}
         href="https://github.com/codedthemes/mantis-free-react-admin-template"
         target="_blank"
@@ -33,7 +33,7 @@ export default function HeaderContent() {
         title="Download Free Version"
         sx={{ color: 'text.primary', bgcolor: 'grey.100' }}
       >
-      </IconButton>
+      </IconButton> */}
 
       <Notification />
       {!downLG && <Profile />}
