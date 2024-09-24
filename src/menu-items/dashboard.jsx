@@ -17,10 +17,10 @@ const dashboard = {
       id: 'dashboard',
       title: 'Booking List',
       type: 'item',
-      url: '/free/login/dashboard/default',
+      url: '/dashboard/default',
       icon: icons.DashboardOutlined,
       breadcrumbs: false
-    }
+    },
   ]
 };
 

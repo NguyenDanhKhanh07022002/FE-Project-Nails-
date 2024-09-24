@@ -273,9 +273,9 @@ export default function OrdersTable({ searchValue }) {
               const labelId = `enhanced-table-checkbox-${index}`;
               const rowDate = new Date(row.date);
 
-              const isPast = rowDate < new Date().setHours(0, 0, 0, 0); // Ngày trước hôm nay
-              const isFuture = rowDate > new Date().setHours(23, 59, 59, 999); // Ngày sau hôm nay
-              const isToday = rowDate.toDateString() === now.toDateString(); // Ngày bằng hôm nay
+              const isPast = rowDate < new Date().setHours(0, 0, 0, 0);
+              const isFuture = rowDate > new Date().setHours(23, 59, 59, 999);
+              const isToday = rowDate.toDateString() === now.toDateString();
 
               return (
                 <TableRow
@@ -283,7 +283,7 @@ export default function OrdersTable({ searchValue }) {
                   role="checkbox"
                   sx={{
                     '&:last-child td, &:last-child th': { border: 0 },
-                    backgroundColor: isPast ? '#ffcccc' : isFuture ? '#ccffcc' : 'inherit', // Màu đỏ nếu trước, màu xanh nếu sau, mặc định nếu hôm nay
+                    backgroundColor: isPast ? '#ffcccc' : isFuture ? '#ccffcc' : 'inherit',
                   }}
                   tabIndex={-1}
                   key={row.id}
