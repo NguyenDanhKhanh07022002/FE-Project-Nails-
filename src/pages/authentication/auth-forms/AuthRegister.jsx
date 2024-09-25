@@ -47,7 +47,7 @@ export default function AuthRegister() {
     })
       .then((response) => {
         alert('Register success!');
-        navigate('/login');
+        navigate('/');
       })
       .catch((error) => {
         setServerError(error.response?.data?.message || 'An error occurred during registration');

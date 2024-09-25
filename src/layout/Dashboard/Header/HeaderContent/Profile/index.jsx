@@ -102,7 +102,7 @@ export default function Profile() {
     if (result.isConfirmed) {
       axios.post('http://localhost:8082/api/auth/logout')
         .then(() => {
-          navigate('/login');
+          navigate('/');
         })
         .catch((error) => {
           console.error('Error during logout', error);
